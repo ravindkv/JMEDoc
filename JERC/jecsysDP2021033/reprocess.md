@@ -304,7 +304,8 @@ Then per η bin:
 1. **R_uncl** (`hruncl`, lines 3911–3945): at pT = 15 GeV, average
    1/JEC over the full |η| < 5.2 jet distribution, separately for L2L3 (MC)
    and L2L3Res (data). This is the average response of the soft, unclustered
-   activity used by the MPF decomposition in `softrad3.C`.
+   activity, intended for the MPF decomposition in `softrad3.C` (which in
+   the `DP_2021` configuration uses a hard-coded value instead).
 2. **Per pT bin** (lines 3948–4327): project the P8 pT–η TH2D at this pT,
    loop over the fine η bins inside [η1, η2] on both +η and −η sides with
    weights w, and accumulate
@@ -436,8 +437,9 @@ For UL16 these are evaluated with UL17 BCDEF files as placeholders
 (the code comments say so), which is why they are tiny (≤0.6 % at 20 GeV).
 
 `hruncl` stores the average response of soft jets at 15 GeV over
-|η| < 5.2, used by `softrad3.C` to convert the unclustered MPF term into a
-JES-corrected quantity.
+|η| < 5.2. It was intended as the unclustered-energy response for
+`softrad3.C`, but in the current (`DP_2021`) chain no other macro reads
+it; `softrad3.C` uses a hard-coded value instead (see `softrad3.md`).
 
 ---
 
@@ -571,12 +573,16 @@ fraction of 15 GeV jets within |η| < 5.2 = 0.988, average L2L3 response
 ## 6. Output contract for the next steps
 
 `softrad3.C` reads from `jecdata<epoch>.root`:
-`<dir>/eta00-13/{mpfchs1,ptchs,mpf1,mpfn,mpfu,rho}_<set>_a<α>` for several
-α values, plus `ratio/eta00-13/hruncl` and `herr_l2l3res`, and writes its
-FSR-corrected graphs back into the same file. `globalFitSyst.C` reads the
-`hsys*`, `herr_*` and PF-fraction graphs to build the systematic
-eigenvectors; `globalFitL3Res.C` reads the cleaned `ratio/` graphs and the
-`herr` band. The naming scheme `<type>_<set>_a<α>` is therefore the
+`<dir>/eta<e>/{counts,mpf1,mpfn,mpfu,mpfchs1,ptchs}_<set>_a<α>` at α = 1.00
+(α = 0.30 for multijet) and writes its FSR corrections (`fsr/hkfsr3_*`) and
+HDM-corrected responses (`hdm_*`) back into the same file (see
+`softrad3.md`). `globalFitSyst.C` reads the `hsys*`, `herr_*`, `hdm_*`,
+`hkfsr3_*` and PF-fraction graphs to build the systematic eigenvectors;
+`globalFitL3Res.C` reads the cleaned `ratio/` graphs, `hkfsr3_*` and the
+`herr`/`herr_l2l3res` bands; `globalFitRenormPF.C` reads `herr_l2l3res` and
+`hdm_*`. `hruncl` is written but not read by any of them.
+
+The naming scheme `<type>_<set>_a<α>` is therefore the
 interface between all macros in the chain and must not be changed in one
 place only.
 
